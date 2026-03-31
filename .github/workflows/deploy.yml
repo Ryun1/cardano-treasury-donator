@@ -20,6 +20,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+        env:
+          NEXT_PUBLIC_BLOCKFROST_PROJECT_ID_PREVIEW: ${{ secrets.NEXT_PUBLIC_BLOCKFROST_PROJECT_ID_PREVIEW }}
+          NEXT_PUBLIC_BLOCKFROST_PROJECT_ID_MAINNET: ${{ secrets.NEXT_PUBLIC_BLOCKFROST_PROJECT_ID_MAINNET }}
       - run: touch out/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:
