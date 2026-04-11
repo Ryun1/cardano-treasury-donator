@@ -37,10 +37,19 @@ async function fetchCurrentSlot(network: NetworkName): Promise<number> {
   return data.slot as number;
 }
 
+function splitMetadataMsg(text: string): string[] {
+  const chunks: string[] = [];
+  for (let i = 0; i < text.length; i += 64) {
+    chunks.push(text.slice(i, i + 64));
+  }
+  return chunks;
+}
+
 export async function buildUnsignedDonationTx(
   wallet: CIP30Wallet,
   donationLovelace: string,
-  network: NetworkName
+  network: NetworkName,
+  metadataMsg?: string
 ): Promise<UnsignedDonationTx> {
   const CSL = await loadCSL();
   const params = getProtocolParams(network);
@@ -89,6 +98,22 @@ export async function buildUnsignedDonationTx(
 
   // Add change output
   txBuilder.add_change_if_needed(changeAddr);
+
+  // Attach CIP-20 metadata if provided
+  if (metadataMsg && metadataMsg.trim().length > 0) {
+    const auxData = CSL.AuxiliaryData.new();
+    const generalMetadata = CSL.GeneralTransactionMetadata.new();
+    const msgChunks = splitMetadataMsg(metadataMsg.trim());
+    generalMetadata.insert(
+      CSL.BigNum.from_str("674"),
+      CSL.encode_json_str_to_metadatum(
+        JSON.stringify({ msg: msgChunks }),
+        CSL.MetadataJsonSchema.BasicConversions
+      )
+    );
+    auxData.set_metadata(generalMetadata);
+    txBuilder.set_auxiliary_data(auxData);
+  }
 
   // Build unsigned transaction
   const unsignedTx = txBuilder.build_tx();

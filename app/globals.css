@@ -52,6 +52,16 @@
   --ring: oklch(0.546 0.245 262.881);
 }
 
+@keyframes step-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.546 0.245 262.881 / 0.4); }
+  50% { box-shadow: 0 0 0 6px oklch(0.546 0.245 262.881 / 0); }
+}
+
+@keyframes step-pulse-error {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.704 0.191 22.216 / 0.4); }
+  50% { box-shadow: 0 0 0 6px oklch(0.704 0.191 22.216 / 0); }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

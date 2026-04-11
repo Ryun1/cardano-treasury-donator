@@ -12,10 +12,11 @@ import type { UnsignedDonationTx, SignedDonationTx } from "@/lib/build-donation-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Loader2, ExternalLink, CircleCheck, CircleX, Wallet } from "lucide-react";
+import { Loader2, ExternalLink, CircleCheck, CircleX } from "lucide-react";
 
-type Step =
+export type Step =
   | { tag: "idle" }
+  | { tag: "metadata"; donationAda: number }
   | { tag: "building"; donationAda: number }
   | { tag: "signing"; donationAda: number; unsigned: UnsignedDonationTx }
   | { tag: "confirming"; donationAda: number; signed: SignedDonationTx }
@@ -23,26 +24,36 @@ type Step =
   | { tag: "success"; donationAda: number; txHash: string }
   | { tag: "error"; message: string; returnTo: "idle" | "confirming"; signed?: SignedDonationTx; donationAda?: number };
 
-export default function DonationForm() {
+interface DonationFormProps {
+  step: Step;
+  setStep: (step: Step) => void;
+}
+
+export default function DonationForm({ step, setStep }: DonationFormProps) {
   const { wallet, connected } = useWallet();
   const { network } = useNetwork();
   const [amount, setAmount] = useState("");
-  const [step, setStep] = useState<Step>({ tag: "idle" });
+  const [metadata, setMetadata] = useState("");
 
   const ada = parseFloat(amount);
   const isIdle = step.tag === "idle";
-  const canDonate = connected && !isNaN(ada) && ada > 0 && isIdle;
+  const canProceed = connected && !isNaN(ada) && ada > 0 && isIdle;
 
-  const handleDonate = async () => {
-    if (!canDonate) return;
+  const handleNext = () => {
+    if (!canProceed) return;
+    setStep({ tag: "metadata", donationAda: ada });
+  };
 
-    const lovelace = Math.round(ada * 1_000_000).toString();
+  const handleBuild = async (withMetadata: boolean) => {
+    const donationAda = step.tag === "metadata" ? step.donationAda : ada;
+    const lovelace = Math.round(donationAda * 1_000_000).toString();
+    const metadataMsg = withMetadata ? metadata.trim() : "";
 
     // Step 1: Build
-    setStep({ tag: "building", donationAda: ada });
+    setStep({ tag: "building", donationAda });
     let unsigned: UnsignedDonationTx;
     try {
-      unsigned = await buildUnsignedDonationTx(wallet, lovelace, network);
+      unsigned = await buildUnsignedDonationTx(wallet, lovelace, network, metadataMsg || undefined);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       setStep({ tag: "error", message, returnTo: "idle" });
@@ -50,7 +61,7 @@ export default function DonationForm() {
     }
 
     // Step 2: Sign
-    setStep({ tag: "signing", donationAda: ada, unsigned });
+    setStep({ tag: "signing", donationAda, unsigned });
     let signed: SignedDonationTx;
     try {
       signed = await signDonationTx(wallet, unsigned);
@@ -64,7 +75,7 @@ export default function DonationForm() {
     }
 
     // Step 3: Show confirmation
-    setStep({ tag: "confirming", donationAda: ada, signed });
+    setStep({ tag: "confirming", donationAda, signed });
   };
 
   const handleSubmit = async () => {
@@ -116,46 +127,65 @@ export default function DonationForm() {
             </span>
           </div>
         </div>
-
-        {!connected && (
-          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Wallet className="size-3" />
-            Connect wallet to donate
-          </p>
-        )}
       </fieldset>
 
-      {/* Action buttons / status based on current step */}
+      {/* Idle: Next button */}
       {step.tag === "idle" && (
         <Button
-          onClick={handleDonate}
-          disabled={!canDonate}
+          onClick={handleNext}
+          disabled={!canProceed}
           size="lg"
           className="w-full"
         >
-          Donate
+          Next
         </Button>
       )}
 
-      {step.tag === "building" && (
-        <div className="flex items-center gap-3 rounded-lg border bg-secondary/50 px-4 py-3 text-sm text-muted-foreground animate-in fade-in duration-300">
-          <Loader2 className="size-4 animate-spin text-primary" />
-          <span>Building transaction...</span>
-        </div>
-      )}
-
-      {step.tag === "signing" && (
-        <div className="flex flex-col gap-2 animate-in fade-in duration-300">
-          <div className="flex items-center gap-3 rounded-lg border bg-secondary/50 px-4 py-3 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin text-primary" />
-            <div className="flex flex-col">
-              <span>Waiting for wallet signature...</span>
-              <span className="text-xs text-muted-foreground/70">Please approve the transaction in your wallet</span>
-            </div>
+      {/* Metadata step */}
+      {step.tag === "metadata" && (
+        <div className="flex flex-col gap-3 animate-in fade-in duration-300">
+          <textarea
+            placeholder="Add a message (optional)"
+            value={metadata}
+            onChange={(e) => setMetadata(e.target.value)}
+            maxLength={256}
+            rows={2}
+            className="rounded-lg border bg-secondary/30 px-4 py-3 text-sm resize-none placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
+          />
+          <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              className="flex-1"
+              onClick={() => { setMetadata(""); handleBuild(false); }}
+            >
+              Skip
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={() => handleBuild(true)}
+            >
+              Next
+            </Button>
           </div>
         </div>
       )}
 
+      {/* Building */}
+      {step.tag === "building" && (
+        <div className="flex items-center justify-center gap-3 rounded-lg border bg-secondary/50 px-4 py-3 text-sm text-muted-foreground animate-in fade-in duration-300">
+          <Loader2 className="size-4 animate-spin text-primary" />
+        </div>
+      )}
+
+      {/* Signing */}
+      {step.tag === "signing" && (
+        <div className="flex items-center justify-center gap-3 rounded-lg border bg-secondary/50 px-4 py-3 text-sm text-muted-foreground animate-in fade-in duration-300">
+          <Loader2 className="size-4 animate-spin text-primary" />
+          <span>Approve in wallet</span>
+        </div>
+      )}
+
+      {/* Confirming */}
       {step.tag === "confirming" && (
         <div className="flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div className="rounded-lg border bg-secondary/30 p-4 flex flex-col gap-2 text-sm">
@@ -178,7 +208,7 @@ export default function DonationForm() {
             size="lg"
             className="w-full bg-emerald-600 hover:bg-emerald-500 text-white"
           >
-            Submit Transaction
+            Submit
           </Button>
           <button
             onClick={() => setStep({ tag: "idle" })}
@@ -189,6 +219,7 @@ export default function DonationForm() {
         </div>
       )}
 
+      {/* Submitting */}
       {step.tag === "submitting" && (
         <div className="flex flex-col gap-3 animate-in fade-in duration-300">
           <div className="rounded-lg border bg-secondary/30 p-4 flex flex-col gap-2 text-sm">
@@ -208,15 +239,13 @@ export default function DonationForm() {
         </div>
       )}
 
+      {/* Success */}
       {step.tag === "success" && (
         <div className="flex flex-col items-center gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-5 text-center animate-in fade-in slide-in-from-bottom-2 duration-500">
           <div className="flex items-center gap-2 text-emerald-400">
             <CircleCheck className="size-5" />
-            <span className="text-lg font-semibold">Thank you!</span>
+            <span className="text-lg font-semibold">{step.donationAda} ada donated</span>
           </div>
-          <p className="text-sm text-emerald-300">
-            You donated {step.donationAda} ada to the Cardano treasury
-          </p>
           <a
             href={`${explorerBase}/${step.txHash}`}
             target="_blank"
@@ -229,7 +258,7 @@ export default function DonationForm() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => { setStep({ tag: "idle" }); setAmount(""); }}
+            onClick={() => { setStep({ tag: "idle" }); setAmount(""); setMetadata(""); }}
             className="mt-1 text-muted-foreground"
           >
             Donate again
@@ -237,6 +266,7 @@ export default function DonationForm() {
         </div>
       )}
 
+      {/* Error */}
       {step.tag === "error" && (
         <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-1 duration-300">
           <div className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-red-300">
@@ -249,7 +279,7 @@ export default function DonationForm() {
             onClick={handleRetry}
             className="self-center"
           >
-            {step.returnTo === "confirming" ? "Retry Submission" : "Try Again"}
+            Retry
           </Button>
         </div>
       )}
