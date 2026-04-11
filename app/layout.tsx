@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: "Cardano Treasury Donator",
-  description: "Donate ADA directly to the Cardano treasury",
+  description: "Donate Ada directly to the Cardano treasury",
 };
 
 export default function RootLayout({

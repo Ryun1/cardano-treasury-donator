@@ -41,7 +41,7 @@ function App() {
           </div>
           <CardTitle className="text-2xl">Treasury Donator</CardTitle>
           <CardDescription>
-            Donate ADA directly to the Cardano treasury. Every lovelace counts.
+            Donate Ada directly to the Cardano treasury. Every lovelace counts.
           </CardDescription>
         </CardHeader>
 

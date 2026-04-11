@@ -2,11 +2,23 @@ import { loadCSL } from "./csl-loader";
 import { getProtocolParams, getBlockfrostUrl, getBlockfrostKey } from "./network";
 import type { NetworkName } from "@/app/providers";
 
-interface CIP30Wallet {
+export interface CIP30Wallet {
   getUtxos(): Promise<string[]>;
   getChangeAddress(): Promise<string>;
   signTx(tx: string, partialSign: boolean): Promise<string>;
   submitTx(tx: string): Promise<string>;
+}
+
+export interface UnsignedDonationTx {
+  unsignedTxHex: string;
+  fee: string;
+  donationLovelace: string;
+}
+
+export interface SignedDonationTx {
+  signedTxHex: string;
+  fee: string;
+  donationLovelace: string;
 }
 
 async function fetchCurrentSlot(network: NetworkName): Promise<number> {
@@ -25,11 +37,11 @@ async function fetchCurrentSlot(network: NetworkName): Promise<number> {
   return data.slot as number;
 }
 
-export async function buildDonationTx(
+export async function buildUnsignedDonationTx(
   wallet: CIP30Wallet,
   donationLovelace: string,
   network: NetworkName
-): Promise<string> {
+): Promise<UnsignedDonationTx> {
   const CSL = await loadCSL();
   const params = getProtocolParams(network);
 
@@ -81,11 +93,22 @@ export async function buildDonationTx(
   // Build unsigned transaction
   const unsignedTx = txBuilder.build_tx();
   const unsignedTxHex = unsignedTx.to_hex();
+  const fee = unsignedTx.body().fee().to_str();
+
+  return { unsignedTxHex, fee, donationLovelace };
+}
+
+export async function signDonationTx(
+  wallet: CIP30Wallet,
+  unsigned: UnsignedDonationTx
+): Promise<SignedDonationTx> {
+  const CSL = await loadCSL();
 
   // Sign via CIP-30 wallet
-  const witnessSetHex = await wallet.signTx(unsignedTxHex, false);
+  const witnessSetHex = await wallet.signTx(unsigned.unsignedTxHex, false);
 
   // Assemble signed transaction
+  const unsignedTx = CSL.Transaction.from_hex(unsigned.unsignedTxHex);
   const witnessSet = CSL.TransactionWitnessSet.from_hex(witnessSetHex);
   const signedTx = CSL.Transaction.new(
     unsignedTx.body(),
@@ -93,8 +116,17 @@ export async function buildDonationTx(
     unsignedTx.auxiliary_data()
   );
 
-  // Submit
-  const txHash = await wallet.submitTx(signedTx.to_hex());
+  return {
+    signedTxHex: signedTx.to_hex(),
+    fee: unsigned.fee,
+    donationLovelace: unsigned.donationLovelace,
+  };
+}
 
+export async function submitDonationTx(
+  wallet: CIP30Wallet,
+  signed: SignedDonationTx
+): Promise<string> {
+  const txHash = await wallet.submitTx(signed.signedTxHex);
   return txHash;
 }

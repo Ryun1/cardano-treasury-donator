@@ -37,7 +37,7 @@ export default function WalletInfo() {
         </div>
         <Badge variant="secondary" className="font-mono tabular-nums">
           {adaBalance !== null ? (
-            <>{adaBalance} ADA</>
+            <>{adaBalance} ada</>
           ) : (
             <span className="inline-block w-16 h-3.5 rounded bg-muted-foreground/20 animate-pulse" />
           )}
