@@ -3,7 +3,6 @@
 import { useAddress, useLovelace, useNetwork as useMeshNetwork } from "@meshsdk/react";
 import { useNetwork } from "@/app/providers";
 import { Badge } from "@/components/ui/badge";
-import { CircleAlert } from "lucide-react";
 
 export default function WalletInfo() {
   const address = useAddress();
@@ -24,28 +23,25 @@ export default function WalletInfo() {
   const truncatedAddress = `${address.slice(0, 12)}...${address.slice(-8)}`;
 
   return (
-    <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-1 duration-300">
-      <div className="flex items-center justify-between rounded-lg border bg-secondary/50 px-4 py-3">
+    <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-1 duration-300 font-mono">
+      <div className="flex items-center justify-between border border-primary/20 bg-secondary/30 px-4 py-3">
         <div className="flex items-center gap-2.5">
-          <span className="relative flex size-2">
-            <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-            <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
-          </span>
-          <span className="font-mono text-sm text-muted-foreground" title={address}>
+          <span className="text-primary animate-[blink-cursor_2s_step-end_infinite]">●</span>
+          <span className="text-sm text-muted-foreground" title={address}>
             {truncatedAddress}
           </span>
         </div>
-        <Badge variant="secondary" className="font-mono tabular-nums">
+        <Badge variant="secondary" className="tabular-nums">
           {adaBalance !== null ? (
             <>{adaBalance} ada</>
           ) : (
-            <span className="inline-block w-16 h-3.5 rounded bg-muted-foreground/20 animate-pulse" />
+            <span className="inline-block w-16 h-3.5 bg-muted-foreground/20 animate-pulse" />
           )}
         </Badge>
       </div>
       {mismatch && (
-        <div className="flex items-start gap-2 rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-300">
-          <CircleAlert className="mt-0.5 size-4 shrink-0" />
+        <div className="flex items-start gap-2 border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          <span className="font-bold shrink-0">[!]</span>
           <span>
             Wallet is on a different network than selected ({network}).
             Please switch your wallet network.

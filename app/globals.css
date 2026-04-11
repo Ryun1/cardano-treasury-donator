@@ -6,7 +6,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-mono);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -23,43 +23,53 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
 }
 
-/* Dark-only app */
+/* Terminal green-on-black */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.546 0.245 262.881);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.546 0.245 262.881);
+  --radius: 0px;
+  --background: oklch(0.05 0.005 145);
+  --foreground: oklch(0.78 0.15 145);
+  --card: oklch(0.08 0.008 145);
+  --card-foreground: oklch(0.78 0.15 145);
+  --popover: oklch(0.08 0.008 145);
+  --popover-foreground: oklch(0.78 0.15 145);
+  --primary: oklch(0.72 0.19 145);
+  --primary-foreground: oklch(0.05 0.005 145);
+  --secondary: oklch(0.14 0.025 145);
+  --secondary-foreground: oklch(0.78 0.15 145);
+  --muted: oklch(0.14 0.025 145);
+  --muted-foreground: oklch(0.5 0.08 145);
+  --accent: oklch(0.14 0.025 145);
+  --accent-foreground: oklch(0.78 0.15 145);
+  --destructive: oklch(0.65 0.2 25);
+  --border: oklch(0.72 0.19 145 / 20%);
+  --input: oklch(0.72 0.19 145 / 15%);
+  --ring: oklch(0.72 0.19 145);
 }
 
 @keyframes step-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(0.546 0.245 262.881 / 0.4); }
-  50% { box-shadow: 0 0 0 6px oklch(0.546 0.245 262.881 / 0); }
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.72 0.19 145 / 0.5); }
+  50% { box-shadow: 0 0 0 6px oklch(0.72 0.19 145 / 0); }
 }
 
 @keyframes step-pulse-error {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(0.704 0.191 22.216 / 0.4); }
-  50% { box-shadow: 0 0 0 6px oklch(0.704 0.191 22.216 / 0); }
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.65 0.2 25 / 0.5); }
+  50% { box-shadow: 0 0 0 6px oklch(0.65 0.2 25 / 0); }
+}
+
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(4px); }
 }
 
 @layer base {
@@ -68,5 +78,32 @@
   }
   body {
     @apply bg-background text-foreground;
+    text-shadow: 0 0 8px oklch(0.72 0.19 145 / 0.3);
+  }
+  /* CRT scanline overlay */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      oklch(0 0 0 / 0.06) 2px,
+      oklch(0 0 0 / 0.06) 4px
+    );
+  }
+  /* Fix MeshSDK button styles that Tailwind preflight strips */
+  .mesh-dark button[class*="mesh-"] {
+    background-color: var(--secondary);
+    border-color: var(--border);
+    color: var(--foreground);
+    border-radius: 0;
+  }
+  .mesh-dark button[class*="mesh-"]:hover {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
   }
 }
