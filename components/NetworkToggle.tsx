@@ -18,7 +18,7 @@ export default function NetworkToggle() {
           size="sm"
           onClick={() => setNetwork(n)}
           className={cn(
-            "h-7 px-3 text-xs font-semibold uppercase tracking-wide",
+            "h-6 px-2.5 text-[10px] font-semibold uppercase tracking-wide",
             network !== n && "text-muted-foreground hover:text-foreground"
           )}
         >

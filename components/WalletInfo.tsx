@@ -19,12 +19,12 @@ export default function WalletInfo() {
 
   const adaBalance = lovelace
     ? (Number(lovelace) / 1_000_000).toFixed(2)
-    : "...";
+    : null;
 
   const truncatedAddress = `${address.slice(0, 12)}...${address.slice(-8)}`;
 
   return (
-    <div className="flex flex-col gap-2 px-6 pb-0 animate-in fade-in slide-in-from-top-1 duration-300">
+    <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-1 duration-300">
       <div className="flex items-center justify-between rounded-lg border bg-secondary/50 px-4 py-3">
         <div className="flex items-center gap-2.5">
           <span className="relative flex size-2">
@@ -36,7 +36,11 @@ export default function WalletInfo() {
           </span>
         </div>
         <Badge variant="secondary" className="font-mono tabular-nums">
-          {adaBalance} ADA
+          {adaBalance !== null ? (
+            <>{adaBalance} ADA</>
+          ) : (
+            <span className="inline-block w-16 h-3.5 rounded bg-muted-foreground/20 animate-pulse" />
+          )}
         </Badge>
       </div>
       {mismatch && (
