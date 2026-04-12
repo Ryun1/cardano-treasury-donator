@@ -10,7 +10,6 @@ import {
 } from "@/lib/build-donation-tx";
 import type { UnsignedDonationTx, SignedDonationTx } from "@/lib/build-donation-tx";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import AsciiSpinner from "@/components/tui/AsciiSpinner";
 import TypewriterText from "@/components/tui/TypewriterText";
@@ -102,24 +101,20 @@ export default function DonationForm({ step, setStep }: DonationFormProps) {
 
   return (
     <div className="flex flex-col gap-4 font-mono">
-      <fieldset disabled={inputsDisabled} className={cn("flex flex-col gap-4 transition-opacity", inputsDisabled && "opacity-50 pointer-events-none")}>
-        <div className="border border-primary/20 bg-secondary/30 p-3 flex flex-col gap-3">
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary/60 pointer-events-none select-none text-sm">&gt;</span>
-            <Input
-              type="number"
-              min="0"
-              step="any"
-              placeholder="0.000000"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="pl-8 pr-14 tabular-nums"
-            />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none select-none">
-              ada
-            </span>
-          </div>
-        </div>
+      <fieldset disabled={inputsDisabled} className={cn("transition-opacity", inputsDisabled && "opacity-50 pointer-events-none")}>
+        <label className="flex items-center h-11 border border-primary/30 bg-secondary/30 px-3 gap-2 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/50">
+          <span className="text-primary/60 select-none text-sm shrink-0">&gt;</span>
+          <input
+            type="number"
+            min="0"
+            step="any"
+            placeholder="0.000000"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="flex-1 min-w-0 bg-transparent outline-none border-0 text-base font-mono tabular-nums placeholder:text-muted-foreground/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          />
+          <span className="text-sm text-muted-foreground select-none shrink-0">ada</span>
+        </label>
       </fieldset>
 
       {/* Idle: Donate button */}
