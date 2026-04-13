@@ -14,7 +14,6 @@ import type { Step } from "@/components/DonationForm";
 import {
   Card,
   CardContent,
-  CardFooter,
 } from "@/components/ui/card";
 
 function getStepIndex(connected: boolean, step: Step): number {
@@ -45,8 +44,11 @@ function App() {
             <h1 className="text-sm font-semibold font-mono uppercase tracking-wider text-primary">
               <span className="text-muted-foreground">&gt;</span> Treasury Donator<span className="animate-[blink-cursor_1s_step-end_infinite] text-primary ml-0.5">_</span>
             </h1>
-            <div className="[&_button]:border [&_button]:border-primary/30 [&_button]:text-sm [&_button]:font-mono">
-              <CardanoWallet isDark={true} />
+            <div className="flex items-center gap-2">
+              <NetworkToggle />
+              <div className="[&_button]:border [&_button]:border-primary/30 [&_button]:text-sm [&_button]:font-mono">
+                <CardanoWallet isDark={true} />
+              </div>
             </div>
           </div>
 
@@ -54,10 +56,6 @@ function App() {
           <WalletInfo />
           <DonationForm step={step} setStep={setStep} />
         </CardContent>
-
-        <CardFooter className="justify-start">
-          <NetworkToggle />
-        </CardFooter>
       </Card>
       <GithubFooter />
     </main>
