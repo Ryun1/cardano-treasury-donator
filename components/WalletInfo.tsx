@@ -5,7 +5,11 @@ import { useNetwork } from "@/app/providers";
 import { useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 
-export default function WalletInfo() {
+interface WalletInfoProps {
+  addNotice: (message: string) => void;
+}
+
+export default function WalletInfo({ addNotice }: WalletInfoProps) {
   const address = useAddress();
   const lovelace = useLovelace();
   const meshNetworkId = useMeshNetwork();
@@ -18,9 +22,13 @@ export default function WalletInfo() {
 
   useEffect(() => {
     if (mismatch) {
+      const walletNet = meshNetworkId === 1 ? "mainnet" : "preview";
+      addNotice(
+        `Wallet is on ${walletNet} but app is set to ${network}. Please switch your wallet network and reconnect.`
+      );
       disconnect();
     }
-  }, [mismatch, disconnect]);
+  }, [mismatch, disconnect, addNotice, meshNetworkId, network]);
 
   if (!connected || !address) return null;
 
@@ -47,15 +55,6 @@ export default function WalletInfo() {
           )}
         </Badge>
       </div>
-      {mismatch && (
-        <div className="flex items-start gap-2 border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          <span className="font-bold shrink-0">[!]</span>
-          <span>
-            Wallet is on a different network than selected ({network}).
-            Please switch your wallet network.
-          </span>
-        </div>
-      )}
     </div>
   );
 }

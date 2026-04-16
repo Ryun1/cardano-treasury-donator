@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useWallet } from "@meshsdk/react";
-import { useNetwork } from "@/app/providers";
+import { useNetwork, type NetworkName } from "@/app/providers";
 import {
   buildUnsignedDonationTx,
   signDonationTx,
@@ -21,7 +21,7 @@ export type Step =
   | { tag: "signing"; donationAda: number; unsigned: UnsignedDonationTx }
   | { tag: "confirming"; donationAda: number; signed: SignedDonationTx }
   | { tag: "submitting"; donationAda: number; signed: SignedDonationTx }
-  | { tag: "success"; donationAda: number; txHash: string }
+  | { tag: "success"; donationAda: number; txHash: string; network: NetworkName }
   | { tag: "error"; message: string; returnTo: "idle" | "confirming"; signed?: SignedDonationTx; donationAda?: number };
 
 interface DonationFormProps {
@@ -76,7 +76,7 @@ export default function DonationForm({ step, setStep }: DonationFormProps) {
     setStep({ tag: "submitting", donationAda, signed });
     try {
       const txHash = await submitDonationTx(wallet, signed);
-      setStep({ tag: "success", donationAda, txHash });
+      setStep({ tag: "success", donationAda, txHash, network });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       setStep({ tag: "error", message, returnTo: "confirming", signed, donationAda });
@@ -92,8 +92,9 @@ export default function DonationForm({ step, setStep }: DonationFormProps) {
     }
   };
 
+  const explorerNetwork = step.tag === "success" ? step.network : network;
   const explorerBase =
-    network === "mainnet"
+    explorerNetwork === "mainnet"
       ? "https://cexplorer.io/tx"
       : "https://preview.cexplorer.io/tx";
 
