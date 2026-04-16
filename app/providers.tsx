@@ -11,7 +11,7 @@ interface NetworkContextType {
 }
 
 const NetworkContext = createContext<NetworkContextType>({
-  network: "preview",
+  network: "mainnet",
   setNetwork: () => {},
 });
 
@@ -20,7 +20,7 @@ export function useNetwork() {
 }
 
 export function Providers({ children }: { children: ReactNode }) {
-  const [network, setNetwork] = useState<NetworkName>("preview");
+  const [network, setNetwork] = useState<NetworkName>("mainnet");
 
   return (
     <NetworkContext.Provider value={{ network, setNetwork }}>

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useWallet } from "@meshsdk/react";
+import { useNetwork } from "./providers";
 import { CardanoWallet } from "@meshsdk/react";
 import { Providers } from "./providers";
 import NetworkToggle from "@/components/NetworkToggle";
@@ -31,7 +32,14 @@ function getStepIndex(connected: boolean, step: Step): number {
 
 function App() {
   const { connected } = useWallet();
+  const { network } = useNetwork();
   const [step, setStep] = useState<Step>({ tag: "idle" });
+  const [resetKey, setResetKey] = useState(0);
+
+  useEffect(() => {
+    setStep({ tag: "idle" });
+    setResetKey((k) => k + 1);
+  }, [network, connected]);
 
   const stepIndex = getStepIndex(connected, step);
 
@@ -54,7 +62,7 @@ function App() {
 
           <DonationStepper currentIndex={stepIndex} isError={step.tag === "error"} />
           <WalletInfo />
-          <DonationForm step={step} setStep={setStep} />
+          <DonationForm key={resetKey} step={step} setStep={setStep} />
         </CardContent>
       </Card>
       <GithubFooter />

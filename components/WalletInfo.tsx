@@ -1,7 +1,8 @@
 "use client";
 
-import { useAddress, useLovelace, useNetwork as useMeshNetwork } from "@meshsdk/react";
+import { useAddress, useLovelace, useNetwork as useMeshNetwork, useWallet } from "@meshsdk/react";
 import { useNetwork } from "@/app/providers";
+import { useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 
 export default function WalletInfo() {
@@ -9,12 +10,19 @@ export default function WalletInfo() {
   const lovelace = useLovelace();
   const meshNetworkId = useMeshNetwork();
   const { network } = useNetwork();
-
-  if (!address) return null;
+  const { connected, disconnect } = useWallet();
 
   const expectedNetworkId = network === "mainnet" ? 1 : 0;
   const mismatch =
     meshNetworkId !== undefined && meshNetworkId !== expectedNetworkId;
+
+  useEffect(() => {
+    if (mismatch) {
+      disconnect();
+    }
+  }, [mismatch, disconnect]);
+
+  if (!connected || !address) return null;
 
   const adaBalance = lovelace
     ? (Number(lovelace) / 1_000_000).toFixed(2)
